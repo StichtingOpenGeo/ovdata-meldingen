@@ -73,7 +73,7 @@ RUN set -eux; \
     chown -R www-data:www-data /flarum
 
 # Site-level extenders and translations, layered over the skeleton's stubs.
-COPY extend.php ./
+COPY extend.php seed-tags.php tags.json ./
 COPY locale ./locale/
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

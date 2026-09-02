@@ -44,6 +44,7 @@ services:
       FLARUM_DEBUG: ${FLARUM_DEBUG:-false}
       ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification,flarum-lang-dutch}
       FORUM_LOCALE: ${FORUM_LOCALE:-nl}
+      SEED_TAGS_ALWAYS: ${SEED_TAGS_ALWAYS:-false}
       MAIL_DRIVER: ${MAIL_DRIVER:-log}
       MAIL_FROM: ${MAIL_FROM:-noreply@localhost}
       MAIL_HOST: ${MAIL_HOST:-}

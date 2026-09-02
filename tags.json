@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Tarieven",
+    "slug": "tarieven",
+    "color": "#D4761A",
+    "icon": "fas fa-euro-sign",
+    "description": "Tariefstructuren, prijzen en fare products."
+  },
+  {
+    "name": "Statische Dienstregeling",
+    "slug": "statische-dienstregeling",
+    "color": "#2C7BB6",
+    "icon": "fas fa-calendar-alt",
+    "description": "Geplande dienstregelingen, roosters en publicatie daarvan."
+  },
+  {
+    "name": "GTFS",
+    "slug": "gtfs",
+    "color": "#4B9560",
+    "icon": "fas fa-file-code",
+    "description": "GTFS-feeds, validatie en vragen over de specificatie."
+  },
+  {
+    "name": "Toegankelijkheid",
+    "slug": "toegankelijkheid",
+    "color": "#7B5EA7",
+    "icon": "fas fa-universal-access",
+    "description": "Toegankelijkheidsgegevens van haltes, voertuigen en reisinformatie."
+  },
+  {
+    "name": "Realtime Gegevens",
+    "slug": "realtime-gegevens",
+    "color": "#C0392B",
+    "icon": "fas fa-satellite-dish",
+    "description": "Actuele vertrektijden, voertuigposities en storingsmeldingen."
+  }
+]

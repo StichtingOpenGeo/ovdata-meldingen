@@ -78,6 +78,41 @@ Everything lives in `.env`; see `.env.example` for the full list.
 Changing `FORUM_URL`, the database settings or `FLARUM_DEBUG` and restarting is
 enough — `config.php` is rewritten from the environment on every boot.
 
+## Categories
+
+Flarum calls them tags; the ones with a position are **primary tags**, which is
+what shows up as a category. `tags.json` defines them and `seed-tags.php`
+creates them on first install:
+
+| Category | Slug |
+| --- | --- |
+| Tarieven | `/t/tarieven` |
+| Statische Dienstregeling | `/t/statische-dienstregeling` |
+| GTFS | `/t/gtfs` |
+| Toegankelijkheid | `/t/toegankelijkheid` |
+| Realtime Gegevens | `/t/realtime-gegevens` |
+
+The seeder only ever **inserts**, and only slugs that are missing. Rename a
+category, recolour it or reorder it in the admin panel and the change sticks
+across restarts and rebuilds — nothing here overwrites it. Deleting one is also
+respected, unless you re-run the seeder.
+
+To change the list, edit `tags.json` and rebuild. On a forum that already
+exists, apply the new entries with:
+
+```sh
+docker compose exec flarum sh -c \
+  'DB_HOST=db DB_NAME=$DB_NAME DB_USER=$DB_USER DB_PASS=$DB_PASS php seed-tags.php'
+```
+
+or set `SEED_TAGS_ALWAYS=true` in `.env` to have every restart pick up
+additions to the file.
+
+Flarum's own installer creates a default **General** tag at position 0, which
+this does not touch. Delete or rename it under **Admin → Tags** if you would
+rather not have it. Note that `min_primary_tags` and `max_primary_tags` are both
+`1` by default, so each discussion gets exactly one category.
+
 ## Languages
 
 Dutch (`flarum-lang/dutch`) and English are both installed; `FORUM_LOCALE`

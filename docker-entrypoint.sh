@@ -24,6 +24,12 @@ APP=/flarum/app
 # from their own settings; this is only what guests and new accounts get.
 : "${FORUM_LOCALE:=nl}"
 
+# Primary tags (Flarum's categories) to create on first install, as JSON.
+# Set SEED_TAGS_ALWAYS=true to re-run on every boot; the seeder only ever adds
+# slugs that are missing, so it never overwrites edits made in the admin panel.
+: "${SEED_TAGS_FILE:=$APP/tags.json}"
+: "${SEED_TAGS_ALWAYS:=false}"
+
 # Mail. "log" writes messages to storage/logs/flarum.log, which is what you
 # want locally: registration confirmation links land in the log instead of
 # vanishing into a mail server that isn't there.
@@ -221,6 +227,12 @@ sql_grant() {
                 );"
 }
 
+seed_tags() {
+    DB_HOST="$DB_HOST" DB_PORT="$DB_PORT" DB_NAME="$DB_NAME" DB_USER="$DB_USER" \
+    DB_PASS="$DB_PASS" DB_PREFIX="$DB_PREFIX" \
+    php "$APP/seed-tags.php" "$SEED_TAGS_FILE"
+}
+
 if [ "${fresh_install:-}" = 1 ]; then
     log "applying voting defaults"
 
@@ -240,6 +252,9 @@ if [ "${fresh_install:-}" = 1 ]; then
     sql_grant 3 'discussion.canSeeVoters'
     sql_grant 3 'discussion.votePosts'      # belt and braces
 
+    log "seeding categories from $SEED_TAGS_FILE"
+    seed_tags
+
     log "configuring mail (driver: ${MAIL_DRIVER})"
     sql_set_setting 'mail_driver' "$MAIL_DRIVER"
     sql_set_setting 'mail_from'   "$MAIL_FROM"
@@ -251,6 +266,11 @@ if [ "${fresh_install:-}" = 1 ]; then
         sql_set_setting 'mail_password'   "$MAIL_PASSWORD"
         sql_set_setting 'mail_encryption' "$MAIL_ENCRYPTION"
     fi
+fi
+
+if [ "${fresh_install:-}" != 1 ] && [ "$SEED_TAGS_ALWAYS" = "true" ]; then
+    log "seeding categories from $SEED_TAGS_FILE"
+    seed_tags
 fi
 
 # --- housekeeping ------------------------------------------------------------
