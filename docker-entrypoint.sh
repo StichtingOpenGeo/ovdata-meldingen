@@ -71,6 +71,17 @@ done
 [ "${ready:-}" = 1 ] || die "database at ${DB_HOST}:${DB_PORT} did not become reachable"
 log "database is up"
 
+# Flarum writes absolute asset URLs built from FORUM_URL. Point it at
+# "localhost" and the CSS/JS links resolve to the *viewer's* machine, so
+# anyone browsing from another host gets unstyled HTML and a dead frontend.
+case "$FORUM_URL" in
+    *localhost*|*127.0.0.1*)
+        log "NOTE: FORUM_URL is ${FORUM_URL} — assets will only load in a browser"
+        log "      on this machine. Browsing from another host? Set FORUM_URL to"
+        log "      the address you actually type (e.g. http://192.168.1.10:8888)."
+        ;;
+esac
+
 # --- is Flarum already installed? -------------------------------------------
 installed=$(mysql_q -N -B -e \
     "SELECT COUNT(*) FROM information_schema.tables
