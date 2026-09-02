@@ -21,6 +21,7 @@
         "docs": "https://docs.flarum.org/"
     },
     "require": {
+        "flarum-lang/dutch": "^1.4",
         "flarum/approval": "*",
         "flarum/bbcode": "*",
         "flarum/core": "^1.8.19",

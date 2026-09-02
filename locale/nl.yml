@@ -1,0 +1,41 @@
+# Dutch translations for fof/gamification, which flarum-lang/dutch does not
+# cover. Registered from the site's extend.php, so it also overrides any
+# upstream strings should the pack add them later.
+core:
+  forum:
+    index_sort:
+      hot_button: Populair
+      votes_button: Stemmen
+
+fof-gamification:
+  forum:
+    votes: Stemmen
+    vote_title: Bekijk wie er gestemd heeft
+    nav:
+      name: Ranglijst
+    ranking:
+      rank: Plaats
+      name: Gebruiker
+      amount: Punten
+    notification:
+      upvote: "{username} stemde je bericht omhoog"
+      downvote: "{username} stemde je bericht omlaag"
+      prefrences:
+        vote: Wanneer er op een van mijn berichten wordt gestemd
+    user:
+      card:
+        points: "{count, plural, one { {count} punt} other {{count} punten}}"
+      rank: "{rank}"
+      votes_link: Stemmen
+    modal:
+      title: Stemmers
+      upvotes_label: 'Omhoog gestemd door:'
+      downvotes_label: 'Omlaag gestemd door:'
+    mod_item: Bekijk stemmers
+    voters:
+      none: Nog niemand heeft gestemd
+      label: Stemmers
+      label_none: Geen stemmen
+    post:
+      upvote_button: Stem omhoog
+      downvote_button: Stem omlaag

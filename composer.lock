@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "831a788ac3af6279faa09635a6aca1ad",
+    "content-hash": "6715113429dd7cd5736fda5c983a7ee7",
     "packages": [
         {
             "name": "axy/backtrace",
@@ -1130,6 +1130,78 @@
                 }
             ],
             "time": "2025-08-08T12:00:00+00:00"
+        },
+        {
+            "name": "flarum-lang/dutch",
+            "version": "v1.4.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flarum-lang/dutch.git",
+                "reference": "97abc5022aded408d1646fe29ee9a0715d8df9fb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flarum-lang/dutch/zipball/97abc5022aded408d1646fe29ee9a0715d8df9fb",
+                "reference": "97abc5022aded408d1646fe29ee9a0715d8df9fb",
+                "shasum": ""
+            },
+            "require": {
+                "flarum/core": "^1.0.0"
+            },
+            "type": "flarum-extension",
+            "extra": {
+                "extiverse": {
+                    "discuss": "https://discuss.flarum.org/d/18962"
+                },
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                },
+                "flarum-locale": {
+                    "code": "nl",
+                    "title": "Nederlands"
+                },
+                "flarum-extension": {
+                    "icon": {
+                        "image": "dutch_core.svg",
+                        "backgroundSize": "cover",
+                        "backgroundPosition": "center"
+                    },
+                    "title": "Dutch",
+                    "category": "language"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Flarum Languages",
+                    "homepage": "https://github.com/flarum-lang"
+                },
+                {
+                    "name": "Rody Molenaar",
+                    "email": "rody.molenaar@xtrada.nl",
+                    "homepage": "http://rodymolenaar.nl/"
+                },
+                {
+                    "name": "Michael V.",
+                    "email": "michael@michaelbelgium.me",
+                    "homepage": "http://michaelbelgium.me"
+                }
+            ],
+            "description": "Dutch language pack for Flarum.",
+            "keywords": [
+                "Dutch",
+                "flarum",
+                "locale"
+            ],
+            "support": {
+                "forum": "https://discuss.flarum.org/d/18962",
+                "issues": "https://github.com/flarum-lang/dutch/issues",
+                "source": "https://github.com/flarum-lang/dutch"
+            },
+            "time": "2026-04-18T23:09:03+00:00"
         },
         {
             "name": "flarum/approval",

@@ -36,6 +36,7 @@ not stored anywhere else.
   decays with age) and **Upvotes** (raw score).
 - A `/rankings` leaderboard of users by points, linked in the sidebar.
 - Points on user cards and profiles.
+- Dutch and English, with Dutch as the default.
 
 Voting is granted to the **Members** group, so you need to be logged in to
 vote. The admin account created at install can vote immediately.
@@ -63,6 +64,8 @@ Everything lives in `.env`; see `.env.example` for the full list.
 | `FORUM_URL` | `http://localhost:8888` | Must match the URL in your browser, port included. Flarum bakes it into generated links. |
 | `HTTP_PORT` | `8888` | Host port to publish. |
 | `ADMIN_USER` / `ADMIN_MAIL` / `ADMIN_PASS` | `admin` / `admin@example.com` / generated | Created on first install only. |
+| `FORUM_LOCALE` | `nl` | Default language for guests and new accounts: `nl` or `en`. |
+| `ENABLE_EXTENSIONS` | `fof-gamification,flarum-lang-dutch` | Enabled on top of Flarum's bundled set. |
 | `MAIL_DRIVER` | `log` | `log`, `smtp`, `mail` or `mailgun`. |
 | `VOTE_FIRST_POST_ONLY` | `true` | Vote on topics only. |
 | `VOTE_UPVOTES_ONLY` | `false` | Hide the downvote arrow. |
@@ -74,6 +77,32 @@ Everything lives in `.env`; see `.env.example` for the full list.
 
 Changing `FORUM_URL`, the database settings or `FLARUM_DEBUG` and restarting is
 enough — `config.php` is rewritten from the environment on every boot.
+
+## Languages
+
+Dutch (`flarum-lang/dutch`) and English are both installed; `FORUM_LOCALE`
+picks the default for guests and new accounts, and every user can override it
+in their own settings.
+
+`FORUM_LOCALE` is applied at install time only. On a forum that already exists,
+change the default under **Admin → Basics → Default language** instead, so this
+container never fights a choice you made in the panel.
+
+The Dutch pack covers Flarum core and 22 FoF extensions, but ships no
+`fof-gamification.yml` — the whole voting UI would otherwise stay English.
+`locale/nl.yml` in this repo fills that in and is registered by `extend.php`
+via `Extend\Locales`. Translations there are merged per key, so they override
+upstream where they overlap and leave everything else alone. Those strings are
+a hand translation, not an official pack: edit `locale/nl.yml` and rebuild if
+you would word something differently.
+
+Adding another language is two steps:
+
+```sh
+docker run --rm -v "$PWD:/lock" -u "$(id -u):$(id -g)" -e COMPOSER_HOME=/tmp/composer \
+    -w /lock composer:2 require flarum-lang/german --no-install '--ignore-platform-req=ext-*'
+# then add flarum-lang-german to ENABLE_EXTENSIONS in .env, and rebuild
+```
 
 ## Registering more users
 

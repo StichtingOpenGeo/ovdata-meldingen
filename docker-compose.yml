@@ -42,7 +42,8 @@ services:
       ADMIN_PASS: ${ADMIN_PASS:-}
       ADMIN_MAIL: ${ADMIN_MAIL:-admin@example.com}
       FLARUM_DEBUG: ${FLARUM_DEBUG:-false}
-      ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification}
+      ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification,flarum-lang-dutch}
+      FORUM_LOCALE: ${FORUM_LOCALE:-nl}
       MAIL_DRIVER: ${MAIL_DRIVER:-log}
       MAIL_FROM: ${MAIL_FROM:-noreply@localhost}
       MAIL_HOST: ${MAIL_HOST:-}

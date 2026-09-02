@@ -20,6 +20,9 @@ APP=/flarum/app
 : "${ADMIN_PASS:=}"
 : "${ADMIN_MAIL:=admin@example.com}"
 : "${FLARUM_DEBUG:=false}"
+# Default language for the forum. Users can pick any enabled language pack
+# from their own settings; this is only what guests and new accounts get.
+: "${FORUM_LOCALE:=nl}"
 
 # Mail. "log" writes messages to storage/logs/flarum.log, which is what you
 # want locally: registration confirmation links land in the log instead of
@@ -33,7 +36,7 @@ APP=/flarum/app
 : "${MAIL_ENCRYPTION:=}"
 
 # Extensions to enable on top of Flarum's own bundled set, comma separated.
-: "${ENABLE_EXTENSIONS:=fof-gamification}"
+: "${ENABLE_EXTENSIONS:=fof-gamification,flarum-lang-dutch}"
 
 # Voting behaviour, applied once at install time. Change them later in
 # Admin -> Gamification; this script will not overwrite your choices.
@@ -220,6 +223,8 @@ sql_grant() {
 
 if [ "${fresh_install:-}" = 1 ]; then
     log "applying voting defaults"
+
+    sql_set_setting 'default_locale' "$FORUM_LOCALE"
 
     sql_set_setting 'fof-gamification.firstPostOnly'             "$(bool01 "$VOTE_FIRST_POST_ONLY")"
     sql_set_setting 'fof-gamification.allowSelfVotes'            "$(bool01 "$VOTE_ALLOW_SELF_VOTES")"
