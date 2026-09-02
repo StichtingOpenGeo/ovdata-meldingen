@@ -1,0 +1,65 @@
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-flarum}
+      MARIADB_USER: ${DB_USER:-flarum}
+      MARIADB_PASSWORD: ${DB_PASS:?set DB_PASS in .env}
+      MARIADB_RANDOM_ROOT_PASSWORD: "yes"
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  flarum:
+    build:
+      context: .
+      args:
+        FLARUM_VERSION: ${FLARUM_VERSION:-v1.8.19}
+    image: flarum-gamification:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-8888}:80"
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-flarum}
+      DB_USER: ${DB_USER:-flarum}
+      DB_PASS: ${DB_PASS}
+      FORUM_URL: ${FORUM_URL:-http://localhost:8888}
+      FORUM_TITLE: ${FORUM_TITLE:-Flarum}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASS: ${ADMIN_PASS:-}
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@example.com}
+      FLARUM_DEBUG: ${FLARUM_DEBUG:-false}
+      ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification}
+      MAIL_DRIVER: ${MAIL_DRIVER:-log}
+      MAIL_FROM: ${MAIL_FROM:-noreply@localhost}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
+      VOTE_FIRST_POST_ONLY: ${VOTE_FIRST_POST_ONLY:-true}
+      VOTE_ALLOW_SELF_VOTES: ${VOTE_ALLOW_SELF_VOTES:-false}
+      VOTE_UPVOTES_ONLY: ${VOTE_UPVOTES_ONLY:-false}
+      VOTE_LIST_LAYOUT: ${VOTE_LIST_LAYOUT:-true}
+      VOTE_SHOW_ON_LIST: ${VOTE_SHOW_ON_LIST:-true}
+    volumes:
+      - flarum-storage:/flarum/app/storage
+      - flarum-assets:/flarum/app/public/assets
+
+volumes:
+  db-data:
+  flarum-storage:
+  flarum-assets:
