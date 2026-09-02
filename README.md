@@ -240,3 +240,12 @@ A few things this image handles that a naive setup gets wrong:
 - The build never resolves dependencies. `composer create-project --no-install`
   fetches only the skeleton's application files; the committed lock then drives
   a plain `composer install`.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Stichting OpenGeo.
+
+This covers the packaging in this repository: the Dockerfile, entrypoint,
+compose file, seeders and translations. The software it installs carries its
+own licences — Flarum and its bundled extensions are MIT, as are
+`fof/gamification` and `flarum-lang/dutch`.
