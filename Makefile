@@ -22,7 +22,20 @@ up: composer.lock
 
 # Always dumps before touching anything: the rebuild itself is safe, but the
 # entrypoint runs "flarum migrate" on boot, and migrations do not roll back.
+#
+# The database has to be running to be dumped, so start it first. Starting db
+# on its own runs no migrations — only the forum's entrypoint does that — so
+# the data is still untouched when the backup is taken.
 update: composer.lock
+	@docker compose up -d db
+	@printf 'waiting for the database'
+	@for i in $$(seq 1 60); do \
+		if [ "$$(docker inspect -f '{{.State.Health.Status}}' $$(docker compose ps -q db) 2>/dev/null)" = "healthy" ]; then \
+			echo " ok"; break; \
+		fi; \
+		printf '.'; sleep 2; \
+		if [ "$$i" = "60" ]; then echo; echo "database did not become healthy"; exit 1; fi; \
+	done
 	./backup.sh
 	docker compose up -d --build
 	@echo

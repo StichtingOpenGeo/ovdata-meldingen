@@ -19,7 +19,17 @@ gzip -t "$sql" || die "$sql is not a valid gzip file"
 
 assets="${sql%.sql.gz}-assets.tar.gz"
 
-docker compose ps --status running --services 2>/dev/null | grep -qx db \
+# Whether a compose service has a running container. Deliberately avoids
+# "docker compose ps --status running --services": --status is not supported by
+# every Compose version, and when it errors the empty output looks exactly like
+# "the service is stopped" — reporting a running stack as down.
+service_running() {
+    cid="$(docker compose ps -q "$1" 2>/dev/null | head -n1)"
+    [ -n "$cid" ] || return 1
+    [ "$(docker inspect -f '{{.State.Running}}' "$cid" 2>/dev/null)" = "true" ]
+}
+
+service_running db \
     || die "the db service is not running — start it with 'make up' first"
 
 if [ "${FORCE:-}" != "1" ]; then

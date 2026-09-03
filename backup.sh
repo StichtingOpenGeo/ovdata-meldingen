@@ -18,7 +18,17 @@ BACKUP_KEEP="${BACKUP_KEEP:-10}"
 
 die() { printf 'backup: %s\n' "$*" >&2; exit 1; }
 
-docker compose ps --status running --services 2>/dev/null | grep -qx db \
+# Whether a compose service has a running container. Deliberately avoids
+# "docker compose ps --status running --services": --status is not supported by
+# every Compose version, and when it errors the empty output looks exactly like
+# "the service is stopped" — reporting a running stack as down.
+service_running() {
+    cid="$(docker compose ps -q "$1" 2>/dev/null | head -n1)"
+    [ -n "$cid" ] || return 1
+    [ "$(docker inspect -f '{{.State.Running}}' "$cid" 2>/dev/null)" = "true" ]
+}
+
+service_running db \
     || die "the db service is not running — start it with 'make up' first"
 
 mkdir -p "$BACKUP_DIR"
@@ -48,12 +58,24 @@ gzip -t "$sql" || die "the dump is not a valid gzip stream — not trusting it"
 grep -q 'Dump completed' <(gzip -dc "$sql" | tail -5) \
     || die "the dump has no completion marker — it was truncated"
 
-echo "backup: archiving uploads ..."
-docker compose exec -T flarum tar -czf - -C /flarum/app/public assets > "$assets"
-gzip -t "$assets" || die "the assets archive is not a valid gzip stream"
+# Uploads need the forum container; the database does not. When the stack is
+# stopped — which is exactly the case when "make update" starts it just to take
+# this dump — skip them rather than failing the whole backup. The assets volume
+# is not being modified while the container is down, so nothing is at risk.
+if service_running flarum; then
+    echo "backup: archiving uploads ..."
+    docker compose exec -T flarum tar -czf - -C /flarum/app/public assets > "$assets"
+    gzip -t "$assets" || die "the assets archive is not a valid gzip stream"
+else
+    echo "backup: the flarum service is not running — skipping uploads"
+    echo "backup: (its volume is untouched; 'make backup' once it is up captures them)"
+    rm -f "$assets"
+    assets=""
+fi
 
-printf 'backup: %s (%s)\n' "$sql"    "$(du -h "$sql"    | cut -f1)"
-printf 'backup: %s (%s)\n' "$assets" "$(du -h "$assets" | cut -f1)"
+printf 'backup: %s (%s)\n' "$sql" "$(du -h "$sql" | cut -f1)"
+[ -n "$assets" ] && printf 'backup: %s (%s)\n' "$assets" "$(du -h "$assets" | cut -f1)"
+true
 
 # Keep the last N pairs; old backups that silently fill the disk are their own
 # kind of outage.
