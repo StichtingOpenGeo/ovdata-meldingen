@@ -62,7 +62,7 @@ Everything lives in `.env`; see `.env.example` for the full list.
 | --- | --- | --- |
 | `DB_PASS` | — | Required. |
 | `FORUM_URL` | `http://localhost:8888` | Must match the URL in your browser, port included. Flarum bakes it into generated links. |
-| `HTTP_PORT` | `8888` | Host port to publish. |
+| `HTTP_PORT` | `8888` | Host port to publish. The container always listens on 8888 internally, so changing this needs a restart, not a rebuild. Keep `FORUM_URL` in step with it. |
 | `ADMIN_USER` / `ADMIN_MAIL` / `ADMIN_PASS` | `admin` / `admin@example.com` / generated | Created on first install only. |
 | `FORUM_LOCALE` | `nl` | Default language for guests and new accounts: `nl` or `en`. |
 | `ENABLE_EXTENSIONS` | `fof-gamification,flarum-lang-dutch` | Enabled on top of Flarum's bundled set. |

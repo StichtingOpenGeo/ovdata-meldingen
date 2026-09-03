@@ -10,11 +10,9 @@ ARG FLARUM_VERSION=v1.8.19
 
 ENV FLARUM_HOME=/flarum/app
 
-# Port nginx listens on inside the container. Deliberately not 80: nothing here
-# needs a privileged port, which is what lets the whole container run as
-# www-data rather than root.
-ARG HTTP_PORT=8888
-ENV HTTP_PORT=${HTTP_PORT}
+# nginx always listens on 8888 *inside* the container. This is deliberately
+# fixed and unrelated to the host port: publish it wherever you like with
+# HTTP_PORT in .env, and no rebuild is needed to change it.
 
 # --- system + PHP extensions Flarum needs -----------------------------------
 # mbstring, dom, tokenizer, curl, fileinfo, openssl and json are already
@@ -67,8 +65,7 @@ RUN set -eux; \
     rm -f /usr/local/etc/php-fpm.d/www.conf /usr/local/etc/php-fpm.d/www.conf.default; \
     rm -f /etc/nginx/sites-enabled/default; \
     mkdir -p /var/run/flarum /var/lib/nginx/body /var/lib/nginx/fastcgi; \
-    chown -R www-data:www-data /var/run/flarum /var/lib/nginx; \
-    sed -i "s/__HTTP_PORT__/${HTTP_PORT}/" /etc/nginx/nginx.conf
+    chown -R www-data:www-data /var/run/flarum /var/lib/nginx
 
 # --- Flarum + FoF Gamification ----------------------------------------------
 WORKDIR ${FLARUM_HOME}
@@ -105,6 +102,6 @@ VOLUME ["/flarum/app/storage", "/flarum/app/public/assets"]
 # master process, no entrypoint, no shell you exec into.
 USER www-data
 
-EXPOSE ${HTTP_PORT}
+EXPOSE 8888
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
