@@ -84,13 +84,13 @@ Flarum calls them tags; the ones with a position are **primary tags**, which is
 what shows up as a category. `tags.json` defines them and `seed-tags.php`
 creates them on first install:
 
-| Category | Slug |
-| --- | --- |
-| Tarieven | `/t/tarieven` |
-| Statische Dienstregeling | `/t/statische-dienstregeling` |
-| GTFS | `/t/gtfs` |
-| Toegankelijkheid | `/t/toegankelijkheid` |
-| Realtime Gegevens | `/t/realtime-gegevens` |
+| Category | Slug | Colour | Icon |
+| --- | --- | --- | --- |
+| Tarieven | `/t/tarieven` | `#D4761A` | `fas fa-euro-sign` |
+| Statische Dienstregeling | `/t/statische-dienstregeling` | `#2C7BB6` | `fas fa-calendar-alt` |
+| GTFS | `/t/gtfs` | `#4B9560` | `fas fa-file-code` |
+| Toegankelijkheid | `/t/toegankelijkheid` | `#7B5EA7` | `fas fa-universal-access` |
+| Realtime Gegevens | `/t/realtime-gegevens` | `#C0392B` | `fas fa-satellite-dish` |
 
 The seeder only ever **inserts**, and only slugs that are missing. Rename a
 category, recolour it or reorder it in the admin panel and the change sticks
@@ -112,6 +112,41 @@ Flarum's own installer creates a default **General** tag at position 0, which
 this does not touch. Delete or rename it under **Admin → Tags** if you would
 rather not have it. Note that `min_primary_tags` and `max_primary_tags` are both
 `1` by default, so each discussion gets exactly one category.
+
+A category added through **Admin → Tags** lives only in the database. It will
+not exist on a fresh install, or after `make clean`. If you want it to be part
+of the forum's definition rather than of one particular database, mirror it
+into `tags.json` — the seeder skips slugs that already exist, so adding it
+there after the fact is safe.
+
+### Choosing an icon and a colour
+
+**Icons must exist in Font Awesome 5.15.4**, which is what Flarum 1.8 bundles.
+This is the easy mistake: search for an icon today and you get Font Awesome 6
+names, and an FA6 name renders as a blank box with no error anywhere. Both
+`fa-location-dot` and `fa-signs-post` fail this way — they are the FA6 spellings
+of `fa-map-marker-alt` and `fa-map-signs`.
+
+Check a name against the running forum before committing to it:
+
+```sh
+curl -s http://localhost:8888/assets/forum.css | grep -c '\.fa-map-marker-alt:before'
+# 1 = usable, 0 = not in this build
+```
+
+Prefer an icon that describes the *subject* rather than one mode of transport:
+`fa-map-marker-alt` covers a bus stop and a Centraal Station equally, where
+`fa-train` quietly claims the category is only about rail.
+
+**Colours should be far apart perceptually, not just different.** These render
+as small labels, where similar hues blur together. Compare a candidate against
+the palette above in CIELAB rather than by eye — ΔE above roughly 25 reads as
+clearly distinct at label size, below 15 gets confusable. Watch the greys too:
+the default General tag is `#888888`, and desaturated candidates collide with
+it before they collide with anything colourful.
+
+Hues currently in use are orange, blue, green, purple and red, which leaves
+teal (`#17868A`) and magenta (`#B0407A`) as the roomiest gaps.
 
 ## Languages
 
