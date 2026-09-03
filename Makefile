@@ -1,12 +1,15 @@
-.PHONY: help lock up down logs shell clean
+.PHONY: help lock up update backup restore down logs shell clean
 
 help:
-	@echo "make lock   - (re)generate composer.json + composer.lock; commit both"
-	@echo "make up     - build and start; generates the lock first if missing"
-	@echo "make logs   - follow the forum log"
-	@echo "make shell  - shell into the running forum container"
-	@echo "make down   - stop (keeps data)"
-	@echo "make clean  - stop and DELETE all data volumes"
+	@echo "make up      - build and start (generates composer.lock if missing)"
+	@echo "make update  - back up, rebuild and restart; use after a git pull"
+	@echo "make backup  - dump the database and uploads to ./backups"
+	@echo "make restore FILE=backups/flarum-<stamp>.sql.gz"
+	@echo "make lock    - re-resolve composer.lock; commit the result"
+	@echo "make logs    - follow the forum log"
+	@echo "make shell   - shell into the running forum container"
+	@echo "make down    - stop (keeps all data)"
+	@echo "make clean   - stop and DELETE all data (backs up first)"
 
 composer.lock:
 	./update-lock.sh
@@ -17,6 +20,23 @@ lock:
 up: composer.lock
 	docker compose up -d --build
 
+# Always dumps before touching anything: the rebuild itself is safe, but the
+# entrypoint runs "flarum migrate" on boot, and migrations do not roll back.
+update: composer.lock
+	./backup.sh
+	docker compose up -d --build
+	@echo
+	@echo "Updated. Watch it come up with 'make logs'."
+	@echo "Note: FORUM_LOCALE, VOTE_* and MAIL_* are applied at install time"
+	@echo "only — change those in the admin panel, not in .env."
+
+backup:
+	./backup.sh
+
+restore:
+	@test -n "$(FILE)" || { echo "usage: make restore FILE=backups/flarum-<stamp>.sql.gz"; exit 1; }
+	./restore.sh "$(FILE)"
+
 down:
 	docker compose down
 
@@ -26,5 +46,13 @@ logs:
 shell:
 	docker compose exec flarum bash
 
+# The only command here that destroys data. It takes a backup first and will
+# not proceed if that backup fails, unless you pass FORCE=1.
 clean:
+	@echo
+	@echo "  This DELETES the database and all uploads for this forum."
+	@echo "  A backup is taken first; 'make restore' can bring it back."
+	@echo
+	@printf '  Type DELETE to continue: '; read answer; [ "$$answer" = "DELETE" ] || { echo "  aborted"; exit 1; }
+	@./backup.sh || { echo; echo "  Backup FAILED — refusing to delete. Pass FORCE=1 to override."; test "$(FORCE)" = "1"; }
 	docker compose down -v

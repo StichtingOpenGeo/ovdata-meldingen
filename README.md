@@ -209,15 +209,77 @@ proxy's address to `nginx.conf` and rebuild. Do not add `real_ip_header`
 without that — trusting a forwarded header from anyone lets clients spoof their
 own IP.
 
-## Backups
-
-State lives in three named volumes: `db-data`, `flarum-storage` (logs, cache,
-sessions) and `flarum-assets` (avatars, uploads, compiled CSS/JS). A database
-dump plus `flarum-assets` is enough to restore.
+## Updating
 
 ```sh
-docker compose exec db mariadb-dump -uflarum -p"$DB_PASS" flarum > backup.sql
+git pull
+make update
 ```
+
+`make update` dumps the database and uploads first, then rebuilds and
+restarts. The dump matters: the entrypoint runs `flarum migrate` on boot, and
+migrations do not roll back.
+
+Volumes are never touched by a rebuild, so your data survives. The only command
+in this repo that deletes anything is `make clean`.
+
+**`.env` changes only half apply.** Compose recreates the container with the new
+values, but several settings are written to the database at install time only,
+so editing them later does nothing — silently:
+
+| Applied on every boot | Applied at install only |
+| --- | --- |
+| `FORUM_URL`, `DB_*`, `FLARUM_DEBUG` | `FORUM_LOCALE` |
+| `HTTP_PORT`, `ENABLE_EXTENSIONS` | `VOTE_*` |
+| `SEED_TAGS_ALWAYS` | `MAIL_*`, `tags.json` |
+
+That is deliberate — it stops the container from overwriting a choice you made
+in the admin panel. Change the right-hand column under **Admin → Basics /
+Gamification / Email** instead.
+
+Since `.env` is gitignored, `diff .env .env.example` after a pull to spot new
+variables. Anything missing falls back to the compose default.
+
+Updating **Flarum itself** is separate, because the lock file pins it:
+
+```sh
+./update-lock.sh          # re-resolve within the current Flarum line
+git diff composer.lock    # see exactly what moved
+make update
+git commit -am 'Bump dependencies'
+```
+
+For a minor release (1.8 → 1.9), bump `FLARUM_VERSION` in `.env` *before*
+running `update-lock.sh` — it pins the skeleton's own application files, and
+changing one without the other mixes files from two releases.
+
+## Backups
+
+```sh
+make backup                                        # → ./backups/
+make restore FILE=backups/flarum-20260903-213223.sql.gz
+```
+
+Each run writes two files: a gzipped SQL dump and a tar of `public/assets`.
+The dump uses `--single-transaction`, so it is a consistent snapshot taken
+without locking — the forum stays up throughout. The script verifies the gzip
+stream and checks for the dump's completion marker before reporting success, so
+a truncated dump fails loudly instead of sitting on disk pretending to be a
+backup.
+
+`storage/` is not backed up on purpose: it holds cache, logs and sessions, all
+regenerated on boot.
+
+The last 10 backups are kept; set `BACKUP_KEEP` to change that, or `BACKUP_DIR`
+to write somewhere else — a different disk is a better place than this one.
+
+`make restore` asks for confirmation, reloads the dump, unpacks the uploads and
+clears the cache. Restore is exercised, not assumed: deleting every discussion
+and a tag, then restoring, brings them all back.
+
+`make clean` is the only destructive command. It requires you to type `DELETE`,
+takes a backup first, and refuses to proceed if that backup fails unless you
+pass `FORCE=1`.
 
 ## Web server and security posture
 
