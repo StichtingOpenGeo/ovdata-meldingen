@@ -174,6 +174,54 @@ docker run --rm -v "$PWD:/lock" -u "$(id -u):$(id -g)" -e COMPOSER_HOME=/tmp/com
 # then add flarum-lang-german to ENABLE_EXTENSIONS in .env, and rebuild
 ```
 
+## Mail
+
+A `mail` service runs postfix with opendkim and opendmarc, so the forum sends
+from its own domain with a valid signature instead of handing Flarum's mail to
+whatever relay happens to be around.
+
+**`MAIL_DOMAIN` is required.** Compose refuses to start without it, on purpose:
+a DKIM key generated for the wrong domain signs nothing useful, and the failure
+would otherwise show up as mail silently landing in spam.
+
+On first boot the container generates a DKIM keypair and prints the three DNS
+records you must publish — SPF, DKIM and DMARC — with the DKIM record filled in
+for your key. Watch for them with `docker compose logs mail`. The key lives on
+the `dkim-keys` volume and is reused across restarts; delete that volume and
+the published DNS record stops matching.
+
+Port 25 is **not published**. The MTA is reachable only from the forum over the
+compose network — verified refused from the LAN. An MTA on a public port is
+found and abused within hours.
+
+### Deliverability is not a config problem
+
+With `MAIL_RELAYHOST` empty, postfix delivers straight to each recipient's MX.
+From a home or office connection that usually fails no matter how correct your
+SPF, DKIM and DMARC are: outbound port 25 is commonly blocked, the IP has no
+reverse DNS, and its reputation is unknown. Gmail and Outlook reject or
+silently spam-file such mail.
+
+If mail is not arriving, point `MAIL_RELAYHOST` at a smarthost — your ISP's
+relay or a transactional provider — with `MAIL_RELAY_USER` and
+`MAIL_RELAY_PASS`. Postfix then submits over TLS with SASL, and the message
+keeps the DKIM signature applied here.
+
+### What opendmarc actually does here
+
+DMARC is a *receiver-side* check: it verifies that inbound mail's SPF or DKIM
+aligns with its From domain. On a send-only MTA there is nothing to verify, so
+opendmarc only stamps `Authentication-Results` and stands ready if this host
+ever accepts inbound mail. It does **not** make your outbound mail more
+deliverable — the `_dmarc` DNS record does that, and it is published in DNS,
+not configured here.
+
+### On a forum that already exists
+
+`MAIL_*` are applied to the database at install time only, so pointing `.env`
+at the new container does nothing to a running forum. Set it under
+**Admin → Email**: driver `smtp`, host `mail`, port `25`, no encryption.
+
 ## Registering more users
 
 The default `MAIL_DRIVER=log` means confirmation emails are written to the log

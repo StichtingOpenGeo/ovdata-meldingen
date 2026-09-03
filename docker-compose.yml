@@ -20,6 +20,31 @@ services:
       timeout: 5s
       retries: 20
 
+  mail:
+    build:
+      context: ./mail
+    image: flarum-mail:local
+    restart: unless-stopped
+    hostname: ${MAIL_HOSTNAME:-mail.example.org}
+    environment:
+      MAIL_DOMAIN: ${MAIL_DOMAIN:?set MAIL_DOMAIN in .env}
+      MAIL_HOSTNAME: ${MAIL_HOSTNAME:-mail.${MAIL_DOMAIN}}
+      DKIM_SELECTOR: ${DKIM_SELECTOR:-mail}
+      DKIM_KEY_BITS: ${DKIM_KEY_BITS:-2048}
+      MAIL_RELAYHOST: ${MAIL_RELAYHOST:-}
+      MAIL_RELAY_USER: ${MAIL_RELAY_USER:-}
+      MAIL_RELAY_PASS: ${MAIL_RELAY_PASS:-}
+    # No published ports. Reachable only from the forum on the compose
+    # network — an MTA on a public port gets found and abused within hours.
+    expose:
+      - "25"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      # The DKIM keypair must outlive the container: regenerating it would
+      # invalidate the DNS record you published.
+      - dkim-keys:/var/lib/opendkim
+
   flarum:
     build:
       context: .
@@ -30,6 +55,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mail:
+        condition: service_started
     ports:
       # Host port is yours to pick; the container side is always 8888, so
       # changing HTTP_PORT needs a restart, not a rebuild.
@@ -55,10 +82,10 @@ services:
       ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification,flarum-lang-dutch}
       FORUM_LOCALE: ${FORUM_LOCALE:-nl}
       SEED_TAGS_ALWAYS: ${SEED_TAGS_ALWAYS:-false}
-      MAIL_DRIVER: ${MAIL_DRIVER:-log}
-      MAIL_FROM: ${MAIL_FROM:-noreply@localhost}
-      MAIL_HOST: ${MAIL_HOST:-}
-      MAIL_PORT: ${MAIL_PORT:-}
+      MAIL_DRIVER: ${MAIL_DRIVER:-smtp}
+      MAIL_FROM: ${MAIL_FROM:-noreply@${MAIL_DOMAIN}}
+      MAIL_HOST: ${MAIL_HOST:-mail}
+      MAIL_PORT: ${MAIL_PORT:-25}
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
@@ -72,6 +99,7 @@ services:
       - flarum-assets:/flarum/app/public/assets
 
 volumes:
+  dkim-keys:
   db-data:
   flarum-storage:
   flarum-assets:
