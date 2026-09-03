@@ -61,8 +61,22 @@ bool01() { case "${1,,}" in 1|true|yes|on) echo 1 ;; *) echo 0 ;; esac; }
 # compatibility symlink, so take whichever is actually on PATH.
 if command -v mariadb >/dev/null 2>&1; then MYSQL_BIN=mariadb; else MYSQL_BIN=mysql; fi
 
+# The MariaDB client does not count MYSQL_PWD as a real password when it
+# decides whether to verify the server certificate, so it disabled verification
+# and warned about it on every single invocation. Handing the password over in a
+# defaults file silences that at the source. The alternative,
+# --ssl-verify-server-cert=0, would silence it by permanently opting out of
+# certificate verification — harmless against a container on a private network,
+# but wrong the day DB_HOST points at a database somewhere else.
+DB_DEFAULTS_FILE="$(mktemp /tmp/flarum-my.XXXXXX.cnf)"
+chmod 600 "$DB_DEFAULTS_FILE"
+trap 'rm -f "$DB_DEFAULTS_FILE"' EXIT
+printf '[client]\npassword="%s"\n' \
+    "$(printf '%s' "$DB_PASS" | sed 's/\\/\\\\/g; s/"/\\"/g')" > "$DB_DEFAULTS_FILE"
+
 mysql_q() {
-    MYSQL_PWD="$DB_PASS" "$MYSQL_BIN" --protocol=TCP \
+    # --defaults-extra-file must come first, before any other option.
+    "$MYSQL_BIN" --defaults-extra-file="$DB_DEFAULTS_FILE" --protocol=TCP \
         -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" "$DB_NAME" "$@"
 }
 
@@ -275,9 +289,10 @@ fi
 
 # --- housekeeping ------------------------------------------------------------
 flarum cache:clear
-for path in "$APP/storage" "$APP/public/assets" "$APP/extensions" "$APP/config.php"; do
-    [ -e "$path" ] && chown -R www-data:www-data "$path" || true
-done
+
+# No chown here: the container runs as www-data, the image already assigns
+# ownership at build time, and Docker seeds a named volume with the ownership
+# of the image directory it shadows. A chown would only ever fail.
 
 if [ "${generated_pass:-}" = 1 ]; then
     cat <<BANNER
@@ -296,6 +311,10 @@ if [ "${generated_pass:-}" = 1 ]; then
 
 BANNER
 fi
+
+# exec replaces this shell, so the EXIT trap would never fire.
+rm -f "$DB_DEFAULTS_FILE"
+trap - EXIT
 
 log "starting: $*"
 exec "$@"

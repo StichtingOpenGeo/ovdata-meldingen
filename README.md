@@ -199,10 +199,15 @@ reproducible image; if you would rather click to install, mount the whole
 
 ## Behind a reverse proxy
 
-Terminate TLS at the proxy, set `FORUM_URL=https://forum.example.com`, and
-uncomment the two `RemoteIP*` lines in `apache-flarum.conf` (both of them —
-enabling the header without a trusted-proxy list lets clients spoof their IP).
-Rebuild afterwards.
+The container speaks plain HTTP on `HTTP_PORT` and binds neither 80 nor 443,
+so it sits behind a proxy without argument. Terminate TLS there, point it at
+`http://<host>:8888`, and set `FORUM_URL=https://forum.example.com` so Flarum
+builds its absolute asset URLs correctly.
+
+If you want nginx to see the real client IP, add a `set_real_ip_from` for your
+proxy's address to `nginx.conf` and rebuild. Do not add `real_ip_header`
+without that — trusting a forwarded header from anyone lets clients spoof their
+own IP.
 
 ## Backups
 
@@ -213,6 +218,43 @@ dump plus `flarum-assets` is enough to restore.
 ```sh
 docker compose exec db mariadb-dump -uflarum -p"$DB_PASS" flarum > backup.sql
 ```
+
+## Web server and security posture
+
+nginx and php-fpm, supervised, in one container. nginx serves static files and
+hands `.php` to php-fpm over a **unix socket** — there is no FastCGI TCP port,
+which matters because FastCGI is unauthenticated and an exposed one is remote
+code execution.
+
+Nothing in the container runs as root:
+
+```
+$ docker compose exec flarum cat /proc/1/status | grep -E 'Uid|CapEff|NoNewPrivs'
+Uid:        33  33  33  33
+CapEff:     0000000000000000
+NoNewPrivs: 1
+```
+
+That falls out of the port choice. nginx listens on 8888 rather than 80, so no
+process ever needs `CAP_NET_BIND_SERVICE`, which in turn means the image can
+set `USER www-data` and compose can drop **all** capabilities and set
+`no-new-privileges`. Neither 80 nor 443 is bound, in the container or on the
+host.
+
+Everything the daemons write to is owned by `www-data` at build time: nginx's
+pid file and temp paths under `/var/run/flarum` and `/var/lib/nginx`, the
+php-fpm socket, and the Flarum tree itself. The entrypoint does no `chown`,
+because as a non-root user it could only fail — Docker seeds a named volume
+with the ownership of the image directory it shadows, so `storage/` and
+`public/assets` come up writable on their own.
+
+Requests for `config.php`, `/vendor`, `/storage` and dotfiles return 404. They
+already sit outside the document root; the rules are there so that a future
+misconfiguration fails closed instead of serving credentials.
+
+The database container keeps its own defaults — MariaDB's image already drops
+to the `mysql` user on its own — plus `no-new-privileges`. Its port is not
+published, so it is reachable only from the flarum container.
 
 ## Notes on the implementation
 
@@ -237,6 +279,11 @@ A few things this image handles that a naive setup gets wrong:
   `flarum extension:enable`, with the app booted.
 - `config.php` is not on a volume; it is regenerated from the environment on
   every boot, so the container stays disposable while the database persists.
+- The MariaDB client does not treat `MYSQL_PWD` as a real password when
+  deciding whether to verify the server's certificate, so it disabled
+  verification and said so on every query — nine warning lines per boot. The
+  entrypoint passes the password in a `--defaults-extra-file` instead, which
+  silences it at the source rather than by opting out of verification for good.
 - The build never resolves dependencies. `composer create-project --no-install`
   fetches only the skeleton's application files; the committed lock then drives
   a plain `composer install`.

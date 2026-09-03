@@ -10,6 +10,8 @@ services:
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
+    security_opt:
+      - no-new-privileges:true
     volumes:
       - db-data:/var/lib/mysql
     healthcheck:
@@ -23,13 +25,21 @@ services:
       context: .
       args:
         FLARUM_VERSION: ${FLARUM_VERSION:-v1.8.19}
+        HTTP_PORT: ${HTTP_PORT:-8888}
     image: flarum-gamification:local
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "${HTTP_PORT:-8888}:80"
+      # Host port only. Nothing binds 80 or 443, here or inside the container.
+      - "${HTTP_PORT:-8888}:${HTTP_PORT:-8888}"
+    # nginx and php-fpm both run as www-data on an unprivileged port, so the
+    # container needs no capabilities at all.
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     environment:
       DB_HOST: db
       DB_PORT: "3306"
