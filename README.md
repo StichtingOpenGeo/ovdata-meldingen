@@ -184,11 +184,24 @@ whatever relay happens to be around.
 a DKIM key generated for the wrong domain signs nothing useful, and the failure
 would otherwise show up as mail silently landing in spam.
 
-On first boot the container generates a DKIM keypair and prints the three DNS
-records you must publish — SPF, DKIM and DMARC — with the DKIM record filled in
-for your key. Watch for them with `docker compose logs mail`. The key lives on
-the `dkim-keys` volume and is reused across restarts; delete that volume and
-the published DNS record stops matching.
+On first boot the container generates a DKIM keypair. To see the records to
+publish, at any time:
+
+```sh
+make dns
+```
+
+It prints SPF, DKIM and DMARC as name/type/value, ready to paste. The DKIM
+value is joined back into one string: `opendkim-genkey` writes BIND zone
+format, splitting it across quoted chunks because a single TXT string cannot
+exceed 255 bytes, and most DNS panels want one value and split it themselves.
+
+It also prints the reverse DNS you need. That one is set at your host or ISP,
+not in your own zone, and large receivers check it.
+
+The key lives on the `dkim-keys` volume and is reused across restarts. Delete
+that volume and a new key is generated, at which point the DKIM record you
+published no longer matches and every signature fails.
 
 Port 25 is **not published**. The MTA is reachable only from the forum over the
 compose network — verified refused from the LAN. An MTA on a public port is

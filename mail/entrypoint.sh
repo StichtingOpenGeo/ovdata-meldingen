@@ -145,28 +145,8 @@ fi
 newaliases 2>/dev/null || true
 
 # --- the DNS records that make any of this work ------------------------------
-dkim_record="$(sed -n 's/.*"v=DKIM1;\(.*\)".*/\1/p' "${KEYDIR}/${DKIM_SELECTOR}.txt" | tr -d '\n' || true)"
-cat <<BANNER
-
-  ============================================================================
-   Publish these DNS records for ${MAIL_DOMAIN}, or mail will be rejected.
-
-   SPF     ${MAIL_DOMAIN}.  TXT  "v=spf1 mx a ~all"
-           (add "include:..." or "ip4:<your public IP>" for whatever actually
-            sends; the default above covers only this host's A and MX records)
-
-   DKIM    ${DKIM_SELECTOR}._domainkey.${MAIL_DOMAIN}.  TXT
-$(sed 's/^/           /' "${KEYDIR}/${DKIM_SELECTOR}.txt")
-
-   DMARC   _dmarc.${MAIL_DOMAIN}.  TXT
-           "v=DMARC1; p=none; rua=mailto:postmaster@${MAIL_DOMAIN}"
-           (start at p=none, read the reports, tighten to quarantine/reject)
-
-   The DKIM record is also at:
-     ${KEYDIR}/${DKIM_SELECTOR}.txt
-  ============================================================================
-
-BANNER
+# Same output as "make dns", so there is one place this is ever formatted.
+mail-dns || true
 
 log "starting: $*"
 exec "$@"

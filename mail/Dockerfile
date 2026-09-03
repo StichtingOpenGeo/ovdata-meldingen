@@ -21,9 +21,10 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY print-dns.sh /usr/local/bin/mail-dns
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY rsyslog.conf /etc/rsyslog.conf
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/mail-dns
 
 # Not published in compose: reachable only from the forum over the internal
 # network. An MTA on a public port is an invitation.

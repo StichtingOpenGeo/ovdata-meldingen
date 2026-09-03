@@ -1,10 +1,11 @@
-.PHONY: help lock up update backup restore down logs shell clean
+.PHONY: help lock up update backup restore dns down logs shell clean
 
 help:
 	@echo "make up      - build and start (generates composer.lock if missing)"
 	@echo "make update  - back up, rebuild and restart; use after a git pull"
 	@echo "make backup  - dump the database and uploads to ./backups"
 	@echo "make restore FILE=backups/flarum-<stamp>.sql.gz"
+	@echo "make dns     - print the SPF, DKIM and DMARC records to publish"
 	@echo "make lock    - re-resolve composer.lock; commit the result"
 	@echo "make logs    - follow the forum log"
 	@echo "make shell   - shell into the running forum container"
@@ -45,6 +46,11 @@ update: composer.lock
 
 backup:
 	./backup.sh
+
+# The boot banner scrolls away, and these are needed again whenever the domain
+# or selector changes.
+dns:
+	@docker compose exec -T mail mail-dns
 
 restore:
 	@test -n "$(FILE)" || { echo "usage: make restore FILE=backups/flarum-<stamp>.sql.gz"; exit 1; }
