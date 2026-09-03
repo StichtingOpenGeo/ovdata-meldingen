@@ -33,5 +33,12 @@
     "color": "#C0392B",
     "icon": "fas fa-satellite-dish",
     "description": "Actuele vertrektijden, voertuigposities en storingsmeldingen."
+  },
+  {
+    "name": "Haltes & Stations",
+    "slug": "haltes-stations",
+    "color": "#17868A",
+    "icon": "fas fa-map-marker-alt",
+    "description": "Halte- en stationsgegevens: locaties, namen, codes en voorzieningen."
   }
 ]
