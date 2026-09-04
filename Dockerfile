@@ -105,6 +105,7 @@ RUN set -eux; \
 # Site-level extenders and translations, layered over the skeleton's stubs.
 COPY extend.php seed-tags.php tags.json ./
 COPY locale ./locale/
+COPY js ./js/
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY tail-flarum-log.sh /usr/local/bin/tail-flarum-log

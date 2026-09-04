@@ -52,15 +52,28 @@ regardless of age. Change it in `extend.php`:
 ->setSort(['lastPostedAt' => 'desc'])                     // stock "Latest"
 ```
 
-**The dropdown will say "Latest" even though the list is sorted by votes.**
-The control never sees the backend default: with no `?sort=` in the URL it
-falls back to the first key of its own frontend `sortMap` for both the label
-and the checkmark. Fixing that means shipping frontend JS to reorder that map,
-which this repo deliberately does not do — the ordering is correct, only the
-label is wrong, and a site-level JS file has to register a proper
-`module.exports` and sort out initializer ordering against the extension that
-adds the key. Clicking any sort option makes the label honest again, since that
-puts `?sort=` in the URL.
+The dropdown label is handled separately, by `js/forum.js`. The control never
+sees the backend default: with no `?sort=` in the URL it falls back to the
+first key of its own frontend `sortMap`, for both the label and the checkmark.
+That file moves the preferred key to the front of the map, so the two agree.
+**If you change `setSort`, change `PREFERRED` in `js/forum.js` to match**, or
+the label will describe a sort the list is not using.
+
+Three things make that file work, each of which silently does nothing if you
+get it wrong:
+
+- It must assign `module.exports`. Flarum wraps site JS with `var module={};`
+  before and `flarum.extensions['site-custom']=module.exports;` after, so
+  leaving it unset registers `undefined` as an extension and `bootExtensions`
+  throws — taking down the entire frontend, not just this tweak.
+- It registers inside an initializer at priority `-100`. `ItemList` sorts
+  descending on priority and `extend` callbacks run in registration order, so
+  a negative priority is what puts this after fof/gamification, which
+  contributes the key being promoted.
+- `flarum.core.compat['forum/app']` **is** the app object and
+  `...['forum/states/DiscussionListState']` **is** the class. There is no
+  `.default` on either; webpack builds get that interop wrapper, hand-written
+  files do not.
 
 **Keep the `lastPostedAt` tiebreaker.** On a forum where nothing has been voted
 on yet, every discussion ties at `votes = 0`; with a single `ORDER BY` the
