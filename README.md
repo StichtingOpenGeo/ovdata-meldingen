@@ -52,12 +52,15 @@ regardless of age. Change it in `extend.php`:
 ->setSort(['lastPostedAt' => 'desc'])                     // stock "Latest"
 ```
 
-The dropdown label is a separate problem from the ordering. It never sees the
-backend default: with no `?sort=` in the URL it falls back to the first key of
-its own `sortMap` for both the label and the checkmark, so the list came back
-sorted by votes while the control read "Latest". `js/forum.js` moves the
-preferred key to the front of that map. **If you change `setSort`, change
-`PREFERRED` in that file to match**, or the label will lie again.
+**The dropdown will say "Latest" even though the list is sorted by votes.**
+The control never sees the backend default: with no `?sort=` in the URL it
+falls back to the first key of its own frontend `sortMap` for both the label
+and the checkmark. Fixing that means shipping frontend JS to reorder that map,
+which this repo deliberately does not do — the ordering is correct, only the
+label is wrong, and a site-level JS file has to register a proper
+`module.exports` and sort out initializer ordering against the extension that
+adds the key. Clicking any sort option makes the label honest again, since that
+puts `?sort=` in the URL.
 
 **Keep the `lastPostedAt` tiebreaker.** On a forum where nothing has been voted
 on yet, every discussion ties at `votes = 0`; with a single `ORDER BY` the

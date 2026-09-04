@@ -10,10 +10,6 @@ return [
     // dropping <code>.yml in locale/.
     (new Extend\Locales(__DIR__.'/locale')),
 
-    // Lines the sort dropdown's label up with the default sort below.
-    (new Extend\Frontend('forum'))
-        ->js(__DIR__.'/js/forum.js'),
-
     // Default sort order for the discussion list.
     //
     // The frontend does not pick a default of its own: with no ?sort= in the
