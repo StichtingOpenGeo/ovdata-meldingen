@@ -229,6 +229,33 @@ triggered it. An endpoint that is slow or down makes posting a discussion slow
 or fail. That is fine for a chat notification on a small forum; if you point
 webhooks at something unreliable, install a real queue driver first.
 
+## Branding
+
+`branding/out/` holds the forum's favicon, generated from the ovdata banner
+artwork by `branding/make-favicon.py`. Upload `favicon.ico` under
+**Admin → Basics → Favicon**; `icon-180.png` is the Apple touch icon and
+`icon-192.png` / `icon-512.png` are the PWA sizes.
+
+Regenerate after changing the artwork:
+
+```sh
+cd branding && docker run --rm -u "$(id -u):$(id -g)" -v "$PWD/../..:/w" \
+    -w /w/flarum-gamification/branding python:3-slim \
+    sh -c 'pip install --quiet --target /tmp/pp Pillow && PYTHONPATH=/tmp/pp python make-favicon.py ../../ovdata.png out/'
+```
+
+The banner cannot simply be cropped. The green arrow's tip and the train's
+nose fall inside the badge's bounding box, and the dark arrowhead physically
+touches the ring — so connected-component filtering alone leaves it fused on.
+The script keeps the ring plus whatever sits well inside it, then discards
+anything non-green out in the ring band, and paints the resulting bite in the
+ring back in.
+
+The speech tail is dropped on purpose. It is good at 512px and mush at 16px,
+where it also costs the bus about 15% of its diameter. The white disc behind
+the ring is likewise deliberate: the bus is near-black and the badge interior
+is transparent, so on a dark browser theme it would otherwise vanish.
+
 ## Languages
 
 Dutch (`flarum-lang/dutch`) and English are both installed; `FORUM_LOCALE`
