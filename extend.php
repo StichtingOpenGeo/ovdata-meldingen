@@ -18,10 +18,10 @@ return [
     // forum opens with. Setting default_route to "/all?sort=hot" does not work,
     // because that is matched as a route path and silently falls back.
     //
-    // 'hotness' is FoF Gamification's Trending order: vote score decayed by
-    // age, so a well-voted topic leads without pinning the front page forever.
-    // Swap for ['votes' => 'desc'] for raw score, or ['lastPostedAt' => 'desc']
-    // for Flarum's stock behaviour.
+    // 'votes' is the raw score: most-upvoted topics first, regardless of age.
+    // Swap for ['hotness' => 'desc'] for Gamification's Trending order, which
+    // decays the score by age, or ['lastPostedAt' => 'desc'] for Flarum's
+    // stock behaviour.
     (new Extend\ApiController(Flarum\Api\Controller\ListDiscussionsController::class))
-        ->setSort(['hotness' => 'desc']),
+        ->setSort(['votes' => 'desc']),
 ];

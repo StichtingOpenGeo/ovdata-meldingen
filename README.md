@@ -43,15 +43,19 @@ vote. The admin account created at install can vote immediately.
 
 ## Default sort order
 
-The discussion list opens on **Trending** — FoF Gamification's `hotness`, which
-is vote score decayed by age, so a well-voted topic leads without holding the
-front page forever. Change it in `extend.php`:
+The discussion list opens on **Upvotes** — raw vote score, highest first,
+regardless of age. Change it in `extend.php`:
 
 ```php
-->setSort(['hotness' => 'desc'])       // Trending (default here)
-->setSort(['votes' => 'desc'])         // raw score, oldest winners stay top
+->setSort(['votes' => 'desc'])         // Upvotes (default here)
+->setSort(['hotness' => 'desc'])       // Trending: score decayed by age
 ->setSort(['lastPostedAt' => 'desc'])  // Flarum's stock "Latest"
 ```
+
+Raw score does not decay, so a topic that wins early keeps the top slot for as
+long as it holds the most votes. That is the right behaviour if the list is
+meant to read as a standing ranking of what matters most; switch to `hotness`
+if you would rather the front page keep turning over.
 
 This is a backend setting, which is not obvious. The frontend picks no default
 of its own: with no `?sort=` in the URL it looks up `sortMap()['']`, finds
