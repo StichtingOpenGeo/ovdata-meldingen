@@ -93,7 +93,8 @@ COPY extend.php seed-tags.php tags.json ./
 COPY locale ./locale/
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+COPY tail-flarum-log.sh /usr/local/bin/tail-flarum-log
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/tail-flarum-log \
  && chown -R www-data:www-data /flarum
 
 VOLUME ["/flarum/app/storage", "/flarum/app/public/assets"]

@@ -176,6 +176,31 @@ docker run --rm -v "$PWD:/lock" -u "$(id -u):$(id -g)" -e COMPOSER_HOME=/tmp/com
 
 ## Mail
 
+### When mail fails
+
+Flarum logs to `storage/logs/flarum-<date>.log` — a **date-rotated** file, so
+`flarum.log` does not exist. The container tails it to stdout, so mail failures
+show up in the ordinary place:
+
+```sh
+docker compose logs -f flarum | grep flarum.ERROR
+```
+
+Be aware that Flarum's **Send test mail** button returns success even when the
+send fails. A `Swift_TransportException` is logged, but the admin panel says
+nothing went wrong, so the log is the only honest signal.
+
+Delivery failures *after* postfix accepts the message are a separate matter and
+appear in the MTA log instead:
+
+```sh
+docker compose logs -f mail          # look for status=bounced / status=deferred
+docker compose exec mail postqueue -p
+```
+
+A message sitting in the queue is postfix still trying; `bounced` means the
+receiving end refused it and the reason is on that line.
+
 A `mail` service runs postfix with opendkim and opendmarc, so the forum sends
 from its own domain with a valid signature instead of handing Flarum's mail to
 whatever relay happens to be around.
@@ -241,7 +266,7 @@ The default `MAIL_DRIVER=log` means confirmation emails are written to the log
 rather than sent. To find a new user's confirmation link:
 
 ```sh
-docker compose exec flarum grep -o 'http[^ ]*/confirm/[^ ]*' storage/logs/flarum.log | tail -1
+docker compose exec flarum sh -c "grep -o 'http[^ ]*/confirm/[^ ]*' storage/logs/flarum-*.log" | tail -1
 ```
 
 For a forum with real users, set `MAIL_DRIVER=smtp` and the `MAIL_*` variables
