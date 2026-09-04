@@ -148,6 +148,34 @@ it before they collide with anything colourful.
 Hues currently in use are orange, blue, green, purple and red, which leaves
 teal (`#17868A`) and magenta (`#B0407A`) as the roomiest gaps.
 
+## Webhooks
+
+`fof/webhooks` posts forum events to an outside endpoint. Configure them under
+**Admin → Webhooks**.
+
+**It is not a generic webhook sender.** It ships three adapters — Discord,
+Slack and Microsoft Teams — and formats the payload for whichever you pick.
+There is no "plain JSON to my own endpoint" option; a service must be chosen
+and the URL must be valid for it. If you want raw JSON, either point it at
+something that speaks the Slack incoming-webhook format, or register your own
+adapter via `Adapters::add()`.
+
+A webhook with no events selected is inert: the API reports `is_valid: false`
+and nothing fires. Events are keyed by Flarum's event classes, for example
+`Flarum\Discussion\Event\Started`.
+
+Message strings are translated in `locale/nl.yml`. The extension ships English
+text, but `flarum-lang/dutch` has no `fof-webhooks.yml` and the fallback does
+not reach the queued job that renders them, so without this every message
+arrives reading `fof-webhooks.actions.discussion.started`.
+
+### Delivery is synchronous
+
+The queue driver is `sync`, so a webhook is delivered inside the request that
+triggered it. An endpoint that is slow or down makes posting a discussion slow
+or fail. That is fine for a chat notification on a small forum; if you point
+webhooks at something unreliable, install a real queue driver first.
+
 ## Languages
 
 Dutch (`flarum-lang/dutch`) and English are both installed; `FORUM_LOCALE`

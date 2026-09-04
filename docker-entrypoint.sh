@@ -42,7 +42,7 @@ APP=/flarum/app
 : "${MAIL_ENCRYPTION:=}"
 
 # Extensions to enable on top of Flarum's own bundled set, comma separated.
-: "${ENABLE_EXTENSIONS:=fof-gamification,flarum-lang-dutch}"
+: "${ENABLE_EXTENSIONS:=fof-gamification,fof-webhooks,flarum-lang-dutch}"
 
 # Voting behaviour, applied once at install time. Change them later in
 # Admin -> Gamification; this script will not overwrite your choices.

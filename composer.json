@@ -39,7 +39,8 @@
         "flarum/subscriptions": "*",
         "flarum/suspend": "*",
         "flarum/tags": "*",
-        "fof/gamification": "^1.6"
+        "fof/gamification": "^1.6",
+        "fof/webhooks": "^1.3"
     },
     "config": {
         "preferred-install": "dist",

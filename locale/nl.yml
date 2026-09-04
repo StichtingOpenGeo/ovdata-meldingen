@@ -39,3 +39,39 @@ fof-gamification:
     post:
       upvote_button: Stem omhoog
       downvote_button: Stem omlaag
+
+# fof/webhooks ships English strings but flarum-lang/dutch has no
+# fof-webhooks.yml, and the fallback to English does not reach the queued job
+# that renders these — so every Slack, Discord or Teams message arrived reading
+# "fof-webhooks.actions.discussion.started". Only the action strings are
+# translated here: those are the ones that leave the forum.
+fof-webhooks:
+  actions:
+    discussion:
+      started: "Nieuwe discussie `{1}`"
+      renamed:
+        title: "Discussie hernoemd `{1}`"
+        description: "Nieuwe titel: {1}"
+      hidden: "Discussie verborgen `{1}`"
+      restored: "Discussie hersteld `{1}`"
+      deleted: "Discussie verwijderd `{1}`"
+
+    group:
+      created: "Groep `{1}` aangemaakt"
+      renamed: "Groep hernoemd naar `{1}`"
+      deleted: "Groep `{1}` verwijderd"
+
+    post:
+      posted: "Nieuwe reactie in `{1}`"
+      revised: "Reactie bewerkt in `{1}`"
+      hidden: "Reactie verborgen in `{1}`"
+      restored: "Reactie hersteld in `{1}`"
+      deleted: "Reactie verwijderd in `{1}`"
+      approved: "Reactie goedgekeurd in `{1}`"
+
+    user:
+      registered: Nieuwe gebruiker geregistreerd
+      renamed:
+        title: "Gebruikersnaam gewijzigd van `{1}`"
+        description: "Nieuwe gebruikersnaam: {1}"
+      deleted: "Gebruiker `{1}` verwijderd"

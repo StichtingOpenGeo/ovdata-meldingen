@@ -79,7 +79,7 @@ services:
       ADMIN_PASS: ${ADMIN_PASS:-}
       ADMIN_MAIL: ${ADMIN_MAIL:-admin@example.com}
       FLARUM_DEBUG: ${FLARUM_DEBUG:-false}
-      ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification,flarum-lang-dutch}
+      ENABLE_EXTENSIONS: ${ENABLE_EXTENSIONS:-fof-gamification,fof-webhooks,flarum-lang-dutch}
       FORUM_LOCALE: ${FORUM_LOCALE:-nl}
       SEED_TAGS_ALWAYS: ${SEED_TAGS_ALWAYS:-false}
       MAIL_DRIVER: ${MAIL_DRIVER:-smtp}
