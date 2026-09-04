@@ -22,6 +22,12 @@ return [
     // Swap for ['hotness' => 'desc'] for Gamification's Trending order, which
     // decays the score by age, or ['lastPostedAt' => 'desc'] for Flarum's
     // stock behaviour.
+    //
+    // lastPostedAt is a tiebreaker, and it is not optional. On a forum where
+    // nothing has been voted on yet every row ties at votes = 0, and a single
+    // ORDER BY leaves the rest to the database — which returns rows in
+    // whatever order it likes, usually close enough to insertion order to look
+    // exactly like the default sort had never been changed.
     (new Extend\ApiController(Flarum\Api\Controller\ListDiscussionsController::class))
-        ->setSort(['votes' => 'desc']),
+        ->setSort(['votes' => 'desc', 'lastPostedAt' => 'desc']),
 ];

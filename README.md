@@ -47,10 +47,15 @@ The discussion list opens on **Upvotes** — raw vote score, highest first,
 regardless of age. Change it in `extend.php`:
 
 ```php
-->setSort(['votes' => 'desc'])         // Upvotes (default here)
-->setSort(['hotness' => 'desc'])       // Trending: score decayed by age
-->setSort(['lastPostedAt' => 'desc'])  // Flarum's stock "Latest"
+->setSort(['votes' => 'desc', 'lastPostedAt' => 'desc'])  // Upvotes (default)
+->setSort(['hotness' => 'desc', 'lastPostedAt' => 'desc'])  // Trending
+->setSort(['lastPostedAt' => 'desc'])                     // stock "Latest"
 ```
+
+**Keep the `lastPostedAt` tiebreaker.** On a forum where nothing has been voted
+on yet, every discussion ties at `votes = 0`; with a single `ORDER BY` the
+database is free to return them in any order, which in practice looks so much
+like the old default that the setting appears not to have applied at all.
 
 Raw score does not decay, so a topic that wins early keeps the top slot for as
 long as it holds the most votes. That is the right behaviour if the list is
