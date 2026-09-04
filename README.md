@@ -41,6 +41,27 @@ not stored anywhere else.
 Voting is granted to the **Members** group, so you need to be logged in to
 vote. The admin account created at install can vote immediately.
 
+## Default sort order
+
+The discussion list opens on **Trending** — FoF Gamification's `hotness`, which
+is vote score decayed by age, so a well-voted topic leads without holding the
+front page forever. Change it in `extend.php`:
+
+```php
+->setSort(['hotness' => 'desc'])       // Trending (default here)
+->setSort(['votes' => 'desc'])         // raw score, oldest winners stay top
+->setSort(['lastPostedAt' => 'desc'])  // Flarum's stock "Latest"
+```
+
+This is a backend setting, which is not obvious. The frontend picks no default
+of its own: with no `?sort=` in the URL it looks up `sortMap()['']`, finds
+nothing, and sends **no sort parameter at all**, so whatever
+`ListDiscussionsController` defaults to is what the forum opens with.
+
+Setting `default_route` to `/all?sort=hot` does **not** work. Flarum matches
+that value against registered route paths, finds none, and silently falls back
+to the plain index — you get stock ordering and no error.
+
 ## Voting on topics, not replies
 
 `VOTE_FIRST_POST_ONLY=true` (the default) restricts voting to the first post of
