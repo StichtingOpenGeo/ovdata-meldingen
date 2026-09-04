@@ -248,11 +248,19 @@ keeps the DKIM signature applied here.
 ### What opendmarc actually does here
 
 DMARC is a *receiver-side* check: it verifies that inbound mail's SPF or DKIM
-aligns with its From domain. On a send-only MTA there is nothing to verify, so
-opendmarc only stamps `Authentication-Results` and stands ready if this host
-ever accepts inbound mail. It does **not** make your outbound mail more
-deliverable — the `_dmarc` DNS record does that, and it is published in DNS,
-not configured here.
+aligns with its From domain. On a send-only MTA there is nothing to verify —
+opendkim *signed* the message rather than verifying it, and nothing ran an SPF
+check — so opendmarc evaluated every outgoing message as `<domain> fail` and
+attached an `Authentication-Results` header saying the forum's own mail failed
+DMARC.
+
+It is therefore configured with `IgnoreHosts`, covering the same networks
+postfix relays for, so it skips our own senders entirely. It stays in the
+milter chain, ready if this host ever accepts inbound mail, where it does have
+something to check.
+
+It does **not** make outbound mail more deliverable. The `_dmarc` DNS record
+does that, and it lives in DNS, not in this container.
 
 ### On a forum that already exists
 
@@ -462,6 +470,15 @@ A few things this image handles that a naive setup gets wrong:
   `flarum extension:enable`, with the app booted.
 - `config.php` is not on a volume; it is regenerated from the environment on
   every boot, so the container stays disposable while the database persists.
+- The official PHP images activate neither `php.ini-production` nor
+  `php.ini-development`, so PHP falls back to `display_errors=On` and
+  `log_errors=Off`: notices are written into the HTTP response body and
+  recorded nowhere. Any diagnostic emitted before the response then makes
+  Laminas throw *"headers already sent"*, turning a harmless deprecation into a
+  500. SwiftMailer is abandoned upstream and pinned by Flarum 1.x, and its
+  PHP 8.2 callable deprecations did exactly that to every attempt to send mail
+  — after the message had already been handed to postfix and delivered. Errors
+  now go to the log, never to the response.
 - The MariaDB client does not treat `MYSQL_PWD` as a real password when
   deciding whether to verify the server's certificate, so it disabled
   verification and said so on every query — nine warning lines per boot. The

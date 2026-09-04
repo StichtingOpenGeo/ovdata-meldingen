@@ -45,6 +45,20 @@ RUN { \
       echo 'opcache.validate_timestamps = 1'; \
       echo 'opcache.revalidate_freq = 2'; \
       echo 'expose_php = Off'; \
+      # The official PHP images activate neither php.ini-production nor
+      # php.ini-development, so PHP falls back to display_errors=On and
+      # log_errors=Off: every notice is written into the HTTP response body and
+      # nothing is recorded anywhere. Any diagnostic emitted before the
+      # response then makes Laminas fail with "headers already sent", turning a
+      # harmless deprecation into a 500 — which is exactly what SwiftMailer's
+      # PHP 8.2 callable deprecations did to every attempt to send mail.
+      echo 'display_errors = Off'; \
+      echo 'display_startup_errors = Off'; \
+      echo 'log_errors = On'; \
+      echo 'error_log = /proc/self/fd/2'; \
+      # SwiftMailer is abandoned upstream and pinned by Flarum 1.x, so its
+      # deprecations are noise nobody can act on. Everything else is reported.
+      echo 'error_reporting = E_ALL & ~E_DEPRECATED'; \
     } > /usr/local/etc/php/conf.d/zz-flarum.ini
 
 COPY --from=composer_bin /usr/bin/composer /usr/local/bin/composer

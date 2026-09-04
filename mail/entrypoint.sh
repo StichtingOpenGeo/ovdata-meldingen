@@ -79,9 +79,18 @@ RejectFailures          false
 TrustedAuthservIDs      ${MAIL_HOSTNAME}
 AuthservID              ${MAIL_HOSTNAME}
 HistoryFile             /var/lib/opendmarc/opendmarc.dat
+# Skip our own senders entirely. DMARC is a receiver-side check: it looks for
+# SPF and DKIM *verification* results and tests whether they align with the
+# From domain. Outbound mail has none — opendkim signed it rather than
+# verifying it, and nothing ran an SPF check — so every message the forum sends
+# was evaluated as "<domain> fail" and left the building carrying an
+# Authentication-Results header saying its own DMARC failed.
+IgnoreHosts             /etc/opendmarc/ignore.hosts
 CONF
-mkdir -p /run/opendmarc /var/lib/opendmarc
-chown -R opendmarc:opendmarc /run/opendmarc /var/lib/opendmarc
+mkdir -p /run/opendmarc /var/lib/opendmarc /etc/opendmarc
+{ echo "localhost"; echo "127.0.0.1"; echo "::1"; for n in $MAIL_MYNETWORKS; do echo "$n"; done; } \
+    > /etc/opendmarc/ignore.hosts
+chown -R opendmarc:opendmarc /run/opendmarc /var/lib/opendmarc /etc/opendmarc
 
 # --- postfix -----------------------------------------------------------------
 postconf -e "myhostname = ${MAIL_HOSTNAME}"
