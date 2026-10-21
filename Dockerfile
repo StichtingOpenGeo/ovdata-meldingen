@@ -45,6 +45,11 @@ RUN { \
       echo 'opcache.validate_timestamps = 1'; \
       echo 'opcache.revalidate_freq = 2'; \
       echo 'expose_php = Off'; \
+      # Upload progress is parsed from any multipart POST carrying a session
+      # cookie, before Flarum runs, and has had a use-after-free leading to
+      # RCE (https://jackalsyn.com/posts/php-up-2026.html). Flarum never uses
+      # it, so it is off.
+      echo 'session.upload_progress.enabled = Off'; \
       # The official PHP images activate neither php.ini-production nor
       # php.ini-development, so PHP falls back to display_errors=On and
       # log_errors=Off: every notice is written into the HTTP response body and
@@ -109,8 +114,12 @@ COPY js ./js/
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY tail-flarum-log.sh /usr/local/bin/tail-flarum-log
+# The root filesystem is read-only at runtime (see docker-compose.yml), but the
+# entrypoint regenerates config.php from the environment on every boot. It
+# lives on the /var/run/flarum tmpfs, and Flarum finds it through this link.
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/tail-flarum-log \
- && chown -R www-data:www-data /flarum
+ && chown -R www-data:www-data /flarum \
+ && ln -sf /var/run/flarum/config.php "$FLARUM_HOME/config.php"
 
 VOLUME ["/flarum/app/storage", "/flarum/app/public/assets"]
 

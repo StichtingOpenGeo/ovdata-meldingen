@@ -67,6 +67,14 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    # Code and config in the image cannot be changed at runtime, so a PHP
+    # exploit cannot plant a backdoor in them. The two volumes below and these
+    # tmpfs mounts are the only writable places. uid/gid 33 is www-data.
+    read_only: true
+    tmpfs:
+      - /tmp:uid=33,gid=33,mode=0700
+      - /var/run/flarum:uid=33,gid=33,mode=0750
+      - /var/lib/nginx:uid=33,gid=33,mode=0750
     environment:
       DB_HOST: db
       DB_PORT: "3306"

@@ -198,7 +198,21 @@ if [ "$installed" = "0" ]; then
             "extensions" => implode(",", $bundled),
         ], JSON_PRETTY_PRINT));
     '
-    flarum install --file="$install_file"
+    # The installer refuses to run unless the base path is writable, and on a
+    # read-only root filesystem /flarum/app is not. Its base path is only used
+    # for that check and for where config.php goes, so point it at the tmpfs
+    # that $APP/config.php links to.
+    APP="$APP" php -r '
+        require getenv("APP")."/vendor/autoload.php";
+        $app = getenv("APP");
+        $site = Flarum\Foundation\Site::fromPaths([
+            "base"    => "/var/run/flarum",
+            "public"  => "$app/public",
+            "storage" => "$app/storage",
+            "vendor"  => "$app/vendor",
+        ]);
+        (new Flarum\Console\Server($site))->listen();
+    ' -- install --file="$install_file"
     rm -f "$install_file"
     fresh_install=1
 
