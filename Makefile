@@ -38,7 +38,10 @@ update: composer.lock
 		if [ "$$i" = "60" ]; then echo; echo "database did not become healthy"; exit 1; fi; \
 	done
 	./backup.sh
-	docker compose up -d --build
+	# --pull fetches the newest php:8.3-fpm, so PHP security releases arrive
+	# with every update instead of only when someone pulls the base by hand.
+	docker compose build --pull
+	docker compose up -d
 	@echo
 	@echo "Updated. Watch it come up with 'make logs'."
 	@echo "Note: FORUM_LOCALE, VOTE_* and MAIL_* are applied at install time"
